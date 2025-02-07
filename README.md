@@ -68,3 +68,36 @@ Enterprise: Custom AI models & deeper analytics
 ✅ Scalable (Can expand into predictive sales & revenue forecasting)
 
 Would you like me to help with the MVP architecture or building a landing page for pre-launch? 🚀
+
+
+lead-intelligence-platform/
+│── backend/              # Flask/FastAPI Backend  
+│   ├── models/          # ML models for lead scoring  
+│   ├── routes/          # API endpoints  
+│   ├── database/        # PostgreSQL ORM models  
+│   ├── services/        # Integrations (HubSpot, LinkedIn, etc.)  
+│   ├── main.py          # App entry point  
+│   ├── requirements.txt # Python dependencies  
+│
+│── frontend/             # React/Next.js Frontend  
+│   ├── src/  
+│   ├── components/  
+│   ├── pages/  
+│   ├── public/  
+│   ├── package.json  
+│
+│── docs/                 # Documentation & API Docs  
+│   ├── architecture.md   # System design details  
+│   ├── API_reference.md  # API documentation  
+│   ├── roadmap.md        # Feature roadmap  
+│
+│── tests/                # Unit & integration tests  
+│
+│── .github/              # GitHub Actions for CI/CD  
+│
+│── docker/               # Docker setup for deployment  
+│
+│── README.md             # Project overview  
+│── .gitignore            # Ignore unnecessary files  
+│── LICENSE               # Open-source license  
+
