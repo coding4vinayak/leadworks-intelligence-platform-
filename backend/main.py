@@ -12,6 +12,9 @@ from backend.routes import (
     scoring_router, campaigns_router, webhooks_router,
     analytics_router,
 )
+from backend.routes.tracking import router as tracking_router
+from backend.middleware.rate_limiter import RateLimitMiddleware
+from backend.middleware.usage_tracker import UsageTrackingMiddleware
 
 logger = structlog.get_logger()
 
@@ -31,6 +34,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Middleware stack (order matters - outermost first)
+app.add_middleware(RateLimitMiddleware)
+app.add_middleware(UsageTrackingMiddleware)
 
 
 # Request timing middleware
@@ -64,6 +72,7 @@ app.include_router(scoring_router, prefix=f"{settings.API_PREFIX}/scoring", tags
 app.include_router(campaigns_router, prefix=f"{settings.API_PREFIX}/campaigns", tags=["Campaigns"])
 app.include_router(webhooks_router, prefix=f"{settings.API_PREFIX}/webhooks", tags=["Webhooks"])
 app.include_router(analytics_router, prefix=f"{settings.API_PREFIX}/analytics", tags=["Analytics"])
+app.include_router(tracking_router, prefix=f"{settings.API_PREFIX}/track", tags=["Tracking"])
 
 
 @app.get("/")
