@@ -1,0 +1,138 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: leadworks-db
+    environment:
+      POSTGRES_USER: leadworks
+      POSTGRES_PASSWORD: leadworks
+      POSTGRES_DB: leadworks
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U leadworks"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis (cache, queue broker, rate limiting)
+  redis:
+    image: redis:7-alpine
+    container_name: leadworks-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: leadworks-api
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://leadworks:leadworks@postgres:5432/leadworks
+      - DATABASE_SYNC_URL=postgresql://leadworks:leadworks@postgres:5432/leadworks
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - JWT_SECRET=${JWT_SECRET:-super-secret-jwt-key}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - HUBSPOT_API_KEY=${HUBSPOT_API_KEY:-}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../backend:/app
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Celery Worker (background tasks: scraping, enrichment, emails)
+  worker:
+    build:
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: leadworks-worker
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://leadworks:leadworks@postgres:5432/leadworks
+      - DATABASE_SYNC_URL=postgresql://leadworks:leadworks@postgres:5432/leadworks
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../backend:/app
+    command: celery -A backend.worker worker --loglevel=info --concurrency=4
+
+  # Celery Beat (scheduled tasks: sync connectors, re-score, daily reports)
+  beat:
+    build:
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: leadworks-beat
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../backend:/app
+    command: celery -A backend.worker beat --loglevel=info
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    container_name: leadworks-web
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Flower (Celery monitoring dashboard)
+  flower:
+    build:
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: leadworks-flower
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/1
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: celery -A backend.worker flower --port=5555
+
+volumes:
+  postgres_data:
+  redis_data:
