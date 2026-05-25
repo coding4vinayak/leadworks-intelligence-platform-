@@ -13,6 +13,12 @@ from backend.routes import (
     analytics_router,
 )
 from backend.routes.tracking import router as tracking_router
+from backend.routes.segments import router as segments_router
+from backend.routes.notifications import router as notifications_router
+from backend.routes.templates import router as templates_router
+from backend.routes.exports import router as exports_router
+from backend.routes.chat import router as chat_router
+from backend.routes.ws import router as ws_router
 from backend.middleware.rate_limiter import RateLimitMiddleware
 from backend.middleware.usage_tracker import UsageTrackingMiddleware
 
@@ -73,6 +79,12 @@ app.include_router(campaigns_router, prefix=f"{settings.API_PREFIX}/campaigns", 
 app.include_router(webhooks_router, prefix=f"{settings.API_PREFIX}/webhooks", tags=["Webhooks"])
 app.include_router(analytics_router, prefix=f"{settings.API_PREFIX}/analytics", tags=["Analytics"])
 app.include_router(tracking_router, prefix=f"{settings.API_PREFIX}/track", tags=["Tracking"])
+app.include_router(segments_router, prefix=f"{settings.API_PREFIX}/segments", tags=["Segments"])
+app.include_router(notifications_router, prefix=f"{settings.API_PREFIX}/notifications", tags=["Notifications"])
+app.include_router(templates_router, prefix=f"{settings.API_PREFIX}/templates", tags=["Templates"])
+app.include_router(exports_router, prefix=f"{settings.API_PREFIX}/exports", tags=["Exports"])
+app.include_router(chat_router, prefix=f"{settings.API_PREFIX}/chat", tags=["AI Chat"])
+app.include_router(ws_router, prefix=f"{settings.API_PREFIX}/ws", tags=["WebSocket"])
 
 
 @app.get("/")

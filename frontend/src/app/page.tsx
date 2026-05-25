@@ -8,6 +8,7 @@ import ScraperPanel from '@/components/ScraperPanel';
 import Connectors from '@/components/Connectors';
 import Campaigns from '@/components/Campaigns';
 import Settings from '@/components/Settings';
+import ChatAssistant from '@/components/ChatAssistant';
 
 export default function Home() {
   const [activePage, setActivePage] = useState('dashboard');
@@ -20,6 +21,7 @@ export default function Home() {
       case 'scrapers': return <ScraperPanel />;
       case 'connectors': return <Connectors />;
       case 'campaigns': return <Campaigns />;
+      case 'chat': return <ChatAssistant />;
       case 'settings': return <Settings />;
       default: return <Dashboard />;
     }
