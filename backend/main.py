@@ -19,6 +19,7 @@ from backend.routes.templates import router as templates_router
 from backend.routes.exports import router as exports_router
 from backend.routes.chat import router as chat_router
 from backend.routes.ws import router as ws_router
+from backend.routes.pipelines import router as pipelines_router
 from backend.middleware.rate_limiter import RateLimitMiddleware
 from backend.middleware.usage_tracker import UsageTrackingMiddleware
 
@@ -85,6 +86,7 @@ app.include_router(templates_router, prefix=f"{settings.API_PREFIX}/templates", 
 app.include_router(exports_router, prefix=f"{settings.API_PREFIX}/exports", tags=["Exports"])
 app.include_router(chat_router, prefix=f"{settings.API_PREFIX}/chat", tags=["AI Chat"])
 app.include_router(ws_router, prefix=f"{settings.API_PREFIX}/ws", tags=["WebSocket"])
+app.include_router(pipelines_router, prefix=f"{settings.API_PREFIX}/pipelines", tags=["Pipelines"])
 
 
 @app.get("/")
